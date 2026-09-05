@@ -119,4 +119,49 @@ document.addEventListener('DOMContentLoaded', () => {
             c.textContent = formatValue(parseFloat(c.dataset.counter) || 0, c.dataset.suffix || '');
         });
     }
+
+    const track = document.querySelector('.projects-track');
+    const prevBtn = document.querySelector('.project-scroll-btn[data-scroll-dir="prev"]');
+    const nextBtn = document.querySelector('.project-scroll-btn[data-scroll-dir="next"]');
+
+    if (track && prevBtn && nextBtn) {
+        const computeStep = () => {
+            const card = track.querySelector('.project-card');
+            if (!card) return track.clientWidth * 0.8;
+            const styles = window.getComputedStyle(track);
+            const gap = parseFloat(styles.columnGap || styles.gap || '0') || 0;
+            return card.getBoundingClientRect().width + gap;
+        };
+
+        const updateButtons = () => {
+            const maxScroll = track.scrollWidth - track.clientWidth;
+            prevBtn.disabled = track.scrollLeft <= 1;
+            nextBtn.disabled = track.scrollLeft >= maxScroll - 1;
+        };
+
+        const scrollByStep = (dir) => {
+            track.scrollBy({
+                left: dir * computeStep(),
+                behavior: reduceMotion ? 'auto' : 'smooth'
+            });
+        };
+
+        prevBtn.addEventListener('click', () => scrollByStep(-1));
+        nextBtn.addEventListener('click', () => scrollByStep(1));
+
+        let trackTicking = false;
+        const onTrackScroll = () => {
+            if (!trackTicking) {
+                trackTicking = true;
+                requestAnimationFrame(() => {
+                    updateButtons();
+                    trackTicking = false;
+                });
+            }
+        };
+
+        track.addEventListener('scroll', onTrackScroll, { passive: true });
+        window.addEventListener('resize', onTrackScroll);
+        updateButtons();
+    }
 });
